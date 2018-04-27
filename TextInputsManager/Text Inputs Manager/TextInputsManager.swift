@@ -10,9 +10,9 @@ import UIKit
 
 open class TextInputsManager: NSObject {
     
-    @IBInspectable open var hideOnTap: Bool = true
-    @IBInspectable open var handleReturnKeyType: Bool = true
-    @IBInspectable open var additionalSpaceAboveKeyboard: CGFloat = 20.0
+    @IBInspectable var hideOnTap: Bool = true
+    @IBInspectable var handleReturnKeyType: Bool = true
+    @IBInspectable var additionalSpaceAboveKeyboard: CGFloat = 20.0
     
     @IBOutlet private weak var containerView: UIView! {
         didSet {
@@ -22,7 +22,7 @@ open class TextInputsManager: NSObject {
     private var viewOriginalFrame = CGRect.zero
     private var textInputs = [UIView]()
     
-    open var returnKeyProvider: ((Int, Bool) -> UIReturnKeyType)? = { (_, isLast) -> UIReturnKeyType in
+     var returnKeyProvider: ((Int, Bool) -> UIReturnKeyType)? = { (_, isLast) -> UIReturnKeyType in
         guard isLast else { return .next }
         return .done
     }
