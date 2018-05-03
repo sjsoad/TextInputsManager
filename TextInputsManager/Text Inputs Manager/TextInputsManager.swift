@@ -8,7 +8,7 @@
 
 import UIKit
 
-open class TextInputsManager: NSObject {
+open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, TextFieldsManagerReloading, FirstResponding {
     
     @IBInspectable var hideOnTap: Bool = true
     @IBInspectable var handleReturnKeyType: Bool = true
@@ -22,7 +22,7 @@ open class TextInputsManager: NSObject {
     private var viewOriginalFrame = CGRect.zero
     private var textInputs = [UIView]()
     
-     var returnKeyProvider: ((Int, Bool) -> UIReturnKeyType)? = { (_, isLast) -> UIReturnKeyType in
+    var returnKeyProvider: ((Int, Bool) -> UIReturnKeyType)? = { (_, isLast) -> UIReturnKeyType in
         guard isLast else { return .next }
         return .done
     }
@@ -144,7 +144,7 @@ open class TextInputsManager: NSObject {
         guard let index = textInputs.index(where: {$0 === textInput}) else { return }
         activateField(at: index + 1)
     }
-
+    
     // MARK: - Keyboard notifications -
     
     @objc private func keyboardWillShow(_ notification: Notification) {
@@ -191,22 +191,18 @@ open class TextInputsManager: NSObject {
         scroll.contentInset = UIEdgeInsets.zero
     }
     
-}
-
-// MARK: - KeyboardHiding -
-
-extension TextInputsManager: KeyboardHiding {
+    // MARK: - KeyboardHiding -
+    
     @objc public func hideKeyboard() {
         textInputs.forEach { textInput in
             guard textInput.isFirstResponder else { return }
             _ = textInput.resignFirstResponder()
         }
     }
-}
-
-// MARK: - TextInputsClearing -
-
-extension TextInputsManager: TextInputsClearing {
+    
+    // MARK: - TextInputsClearing -
+    
+    
     public func clearTextInputs() {
         for textInput in textInputs {
             if let textField = textInput as? UITextField {
@@ -219,20 +215,16 @@ extension TextInputsManager: TextInputsClearing {
             }
         }
     }
-}
-
-// MARK: - TextFieldsManagerReloading -
-
-extension TextInputsManager: TextFieldsManagerReloading {
+    
+    // MARK: - TextFieldsManagerReloading -
+    
     public func reloadTextFieldsManager() {
         textInputs.removeAll()
         collectTextInputs()
     }
-}
-
-// MARK: - FirstResponding -
-
-extension TextInputsManager: FirstResponding {
+    
+    // MARK: - FirstResponding -
+    
     public func firstResponder() -> UIView? {
         let textInput = textInputs.first(where: { (textInput) -> Bool in
             return textInput.isFirstResponder
