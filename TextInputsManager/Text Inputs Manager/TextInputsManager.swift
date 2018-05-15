@@ -11,6 +11,7 @@ import UIKit
 open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, TextFieldsManagerReloading, FirstResponding {
     
     @IBInspectable var hideOnTap: Bool = true
+    @IBInspectable var nextBecomesFirstResponder: Bool = true
     @IBInspectable var handleReturnKeyType: Bool = true
     @IBInspectable var additionalSpaceAboveKeyboard: CGFloat = 20.0
     
@@ -141,7 +142,7 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     }
     
     @objc private func didFinishEdititng(_ textInput: UITextInput) {
-        guard let index = textInputs.index(where: {$0 === textInput}) else { return }
+        guard let index = textInputs.index(where: {$0 === textInput}), nextBecomesFirstResponder else { return }
         activateField(at: index + 1)
     }
     
