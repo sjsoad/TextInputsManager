@@ -142,7 +142,9 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     }
     
     @objc private func didFinishEdititng(_ textInput: UITextInput) {
-        guard let index = textInputs.index(where: {$0 === textInput}), nextBecomesFirstResponder else { return }
+        guard let index = textInputs.index(where: {$0 === textInput}), nextBecomesFirstResponder else {
+            hideKeyboard()
+            return }
         activateField(at: index + 1)
     }
     
