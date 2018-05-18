@@ -10,23 +10,24 @@ import UIKit
 
 open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, TextFieldsManagerReloading, FirstResponding {
     
-    @IBInspectable var hideOnTap: Bool = true
-    @IBInspectable var nextBecomesFirstResponder: Bool = true
-    @IBInspectable var handleReturnKeyType: Bool = true
-    @IBInspectable var additionalSpaceAboveKeyboard: CGFloat = 20.0
+    @IBInspectable public var hideOnTap: Bool = true
+    @IBInspectable public var nextBecomesFirstResponder: Bool = true
+    @IBInspectable public var handleReturnKeyType: Bool = true
+    @IBInspectable public var additionalSpaceAboveKeyboard: CGFloat = 20.0
+    
+    public var returnKeyProvider: ((Int, Bool) -> UIReturnKeyType)? = { (_, isLast) -> UIReturnKeyType in
+        guard isLast else { return .next }
+        return .done
+    }
     
     @IBOutlet private weak var containerView: UIView! {
         didSet {
             configureManager()
         }
     }
+    
     private var viewOriginalFrame = CGRect.zero
     private var textInputs = [UIView]()
-    
-    var returnKeyProvider: ((Int, Bool) -> UIReturnKeyType)? = { (_, isLast) -> UIReturnKeyType in
-        guard isLast else { return .next }
-        return .done
-    }
     
     // MARK: - Life -
     
