@@ -9,8 +9,8 @@
 import Foundation
 import UIKit
 
-public protocol TextFieldsManagerReloading {
-    func reloadTextFieldsManager()
+public protocol TextInputsManagerReloading {
+    func reloadTextInputsManager()
 }
 
 public protocol TextInputsClearing {

@@ -8,7 +8,7 @@
 
 import UIKit
 
-open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, TextFieldsManagerReloading, FirstResponding {
+open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, TextInputsManagerReloading, FirstResponding {
     
     @IBInspectable public var hideOnTap: Bool = true
     @IBInspectable public var nextBecomesFirstResponder: Bool = true
@@ -222,7 +222,7 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     
     // MARK: - TextFieldsManagerReloading -
     
-    public func reloadTextFieldsManager() {
+    public func reloadTextInputsManager() {
         textInputs.removeAll()
         collectTextInputs()
     }
