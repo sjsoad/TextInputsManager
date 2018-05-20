@@ -8,17 +8,14 @@
 
 import UIKit
 
+public typealias ReturnKeyProviderHandler = ((Int, Bool) -> UIReturnKeyType)
+
 open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, TextInputsManagerReloading, FirstResponding {
     
-    @IBInspectable public var hideOnTap: Bool = true
-    @IBInspectable public var nextBecomesFirstResponder: Bool = true
-    @IBInspectable public var handleReturnKeyType: Bool = true
-    @IBInspectable public var additionalSpaceAboveKeyboard: CGFloat = 20.0
-    
-    public var returnKeyProvider: ((Int, Bool) -> UIReturnKeyType)? = { (_, isLast) -> UIReturnKeyType in
-        guard isLast else { return .next }
-        return .done
-    }
+    @IBInspectable private var hideOnTap: Bool = true
+    @IBInspectable private var nextBecomesFirstResponder: Bool = true
+    @IBInspectable private var handleReturnKeyType: Bool = true
+    @IBInspectable private var additionalSpaceAboveKeyboard: CGFloat = 20.0
     
     @IBOutlet private weak var containerView: UIView! {
         didSet {
@@ -26,7 +23,11 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
         }
     }
     
-    private var viewOriginalFrame = CGRect.zero
+    private var returnKeyProvider: ReturnKeyProviderHandler = { (_, isLast) -> UIReturnKeyType in
+        guard isLast else { return .next }
+        return .done
+    }
+    private var keyboardRect = CGRect.zero
     private var textInputs = [UIView]()
     
     // MARK: - Life -
@@ -57,7 +58,6 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     /* Collects all subviews with type UITextField and UITextView */
     
     private func collectTextInputs() {
-        viewOriginalFrame = containerView.frame
         textInputs += collectTextFields()
         textInputs += collectTextViews()
         sortInputsByOrigin()
@@ -112,6 +112,10 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
             return
         }
         nextInputView.becomeFirstResponder()
+        UIView.animate(withDuration: 0.25) { [weak self] in
+            guard let strongSelf = self else { return }
+            strongSelf.moveToActiveTextInput(keyboardFrame: strongSelf.keyboardRect)
+        }
     }
     
     private func assignReturnKeys() {
@@ -121,7 +125,7 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     }
     
     private func assignReturnKey(for inputView: UIView, at index: Int) {
-        guard let textField = inputView as? UITextField, let returnKeyProvider = returnKeyProvider else { return }
+        guard let textField = inputView as? UITextField else { return }
         let isLast = textInputs.indices.last == index
         textField.returnKeyType = returnKeyProvider(index, isLast)
     }
@@ -130,6 +134,7 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
         guard let userInfo = notification.userInfo, let rect = userInfo[UIKeyboardFrameEndUserInfoKey] as? CGRect,
             let animationDurarion = userInfo[UIKeyboardAnimationDurationUserInfoKey] as? TimeInterval,
             let curve = userInfo[UIKeyboardAnimationCurveUserInfoKey] as? UInt else { return }
+        keyboardRect = rect
         UIView.animate(withDuration: animationDurarion, delay: 0, options: UIViewAnimationOptions(rawValue: curve), animations: {
             actionHandler(rect)
         }, completion: nil)
@@ -171,10 +176,10 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
         var frame = containerView.convert(activeInputView.bounds, from: activeInputView)
         frame.origin.y += additionalSpaceAboveKeyboard
         guard let scroll = containerView as? UIScrollView else {
-            let visibleContentHeight = viewOriginalFrame.height - rect.height
+            let visibleContentHeight = containerView.bounds.height - rect.height
             guard frame.maxY > visibleContentHeight else { return }
             let delta = frame.maxY - visibleContentHeight
-            containerView.frame.origin.y -= delta
+            containerView.transform = CGAffineTransform(translationX: 0, y: -delta)
             return
         }
         scroll.scrollRectToVisible(frame, animated: false)
@@ -189,10 +194,18 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     
     private func keyboardWillHide() {
         guard let scroll = containerView as? UIScrollView else {
-            containerView.frame = viewOriginalFrame
+            containerView.transform = .identity
             return
         }
         scroll.contentInset = UIEdgeInsets.zero
+    }
+    
+    // MARK: - Public -
+    
+    public func set(returnKeyProvider: @escaping ReturnKeyProviderHandler) {
+        guard !handleReturnKeyType else { return }
+        self.returnKeyProvider = returnKeyProvider
+        assignReturnKeys()
     }
     
     // MARK: - KeyboardHiding -
