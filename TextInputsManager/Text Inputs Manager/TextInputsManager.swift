@@ -176,9 +176,11 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
         var frame = containerView.convert(activeInputView.bounds, from: activeInputView)
         frame.origin.y += additionalSpaceAboveKeyboard
         guard let scroll = containerView as? UIScrollView else {
-            let visibleContentHeight = containerView.bounds.height - rect.height
-            guard frame.maxY > visibleContentHeight else { return }
-            let delta = frame.maxY - visibleContentHeight
+            containerView.transform = .identity
+            let visibleContentHeight = UIScreen.main.bounds.height - rect.height
+            let yPositionRelativeToWindow = containerView.frame.minY + frame.maxY
+            guard yPositionRelativeToWindow > visibleContentHeight else { return }
+            let delta = yPositionRelativeToWindow - visibleContentHeight
             containerView.transform = CGAffineTransform(translationX: 0, y: -delta)
             return
         }
