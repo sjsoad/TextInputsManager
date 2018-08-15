@@ -16,21 +16,23 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     @IBInspectable private var nextBecomesFirstResponder: Bool = true
     @IBInspectable private var handleReturnKeyType: Bool = true
     @IBInspectable private var additionalSpaceAboveKeyboard: CGFloat = 20.0
-    
-    @IBOutlet private weak var containerView: UIView! {
-        didSet {
-            configureManager()
-        }
-    }
+
+    @IBOutlet private weak var containerView: UIView!
     
     private var returnKeyProvider: ReturnKeyProviderHandler = { (_, isLast) -> UIReturnKeyType in
         guard isLast else { return .next }
         return .done
     }
+    
     private var keyboardRect = CGRect.zero
     private var textInputs = [UIView]()
     
     // MARK: - Life -
+    
+    open override func awakeFromNib() {
+        super.awakeFromNib()
+        configureManager()
+    }
     
     deinit {
         NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillShow, object: nil)
@@ -58,26 +60,25 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     /* Collects all subviews with type UITextField and UITextView */
     
     private func collectTextInputs() {
-        textInputs += collectTextFields()
-        textInputs += collectTextViews()
+        textInputs = collectTextFields() + collectTextViews()
         sortInputsByOrigin()
         guard handleReturnKeyType else { return }
         assignReturnKeys()
     }
     
     private func collectTextFields() -> [UIView] {
-        let textFields: [UIView] = containerView.subviewsOf(type: UITextField.self).compactMap { (textField) -> UIView? in
+        let textFields = containerView.subviewsOf(type: UITextField.self)
+        textFields.forEach { (textField) in
             textField.addTarget(self, action: #selector(didFinishEdititng), for: .editingDidEndOnExit)
-            return textField
         }
         return textFields
     }
     
     private func collectTextViews() -> [UIView] {
-        let textViews: [UIView] = containerView.subviewsOf(type: UITextView.self).compactMap { (textView) -> UIView? in
+        let textViews = containerView.subviewsOf(type: UITextView.self)
+        textViews.forEach { (textView) in
             NotificationCenter.default.addObserver(self, selector: #selector(textViewDidFinishEdititng), name: .UITextViewTextDidEndEditing,
                                                    object: textView)
-            return textView
         }
         return textViews
     }
@@ -85,12 +86,12 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     private func sortInputsByOrigin() {
         guard let window = UIApplication.shared.keyWindow else { return }
         textInputs.sort { (currentObject, nextObject) -> Bool in
-            let currentObjectRect = currentObject.convert(currentObject.frame, to: window)
-            let nextObjectRect = nextObject.convert(nextObject.frame, to: window)
-            guard currentObjectRect.origin.y != nextObjectRect.origin.y else {
-                return currentObjectRect.origin.x < nextObjectRect.origin.x
+            let currentObjectOrigin = currentObject.convert(currentObject.frame.origin, to: window)
+            let nextObjectOrigin = nextObject.convert(nextObject.frame.origin, to: window)
+            guard currentObjectOrigin.y != nextObjectOrigin.y else {
+                return currentObjectOrigin.x < nextObjectOrigin.x
             }
-            return currentObjectRect.origin.y < nextObjectRect.origin.y
+            return currentObjectOrigin.y < nextObjectOrigin.y
         }
     }
     
@@ -108,7 +109,8 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
         }
         let nextInputView = textInputs[index]
         guard nextInputView.canBecomeFirstResponder else {
-            activateField(at: index + 1)
+            let nextIndex = index + 1
+            activateField(at: nextIndex)
             return
         }
         nextInputView.becomeFirstResponder()
@@ -151,7 +153,8 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
         guard let index = textInputs.index(where: {$0 === textInput}), nextBecomesFirstResponder else {
             hideKeyboard()
             return }
-        activateField(at: index + 1)
+        let nextIndex = index + 1
+        activateField(at: nextIndex)
     }
     
     // MARK: - Keyboard notifications -
@@ -199,7 +202,7 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
             containerView.transform = .identity
             return
         }
-        scroll.contentInset = UIEdgeInsets.zero
+        scroll.contentInset = .zero
     }
     
     // MARK: - Public -
@@ -223,7 +226,7 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     
     
     public func clearTextInputs() {
-        for textInput in textInputs {
+        textInputs.forEach { textInput in
             if let textField = textInput as? UITextField {
                 textField.text = nil
                 textField.attributedText = nil
@@ -259,9 +262,7 @@ extension TextInputsManager: UIGestureRecognizerDelegate {
     public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
         let tables: [UIView] = containerView.subviewsOf(type: UITableView.self)
         let collections: [UIView] = containerView.subviewsOf(type: UICollectionView.self)
-        var subviews = [UIView]()
-        subviews += tables
-        subviews += collections
+        let subviews: [UIView] = tables + collections
         for subview in subviews {
             let point = gestureRecognizer.location(in: subview)
             if subview.point(inside: point, with: nil) {
