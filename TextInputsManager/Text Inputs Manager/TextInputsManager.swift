@@ -37,8 +37,7 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     deinit {
         NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillShow, object: nil)
         NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillHide, object: nil)
-        textInputs.forEach { (textInput) in
-            guard let textView = textInput as? UITextView else { return }
+        textInputs.compactMap({ $0 as? UITextView }).forEach { (textView) in
             NotificationCenter.default.removeObserver(self, name: .UITextViewTextDidEndEditing, object: textView)
         }
     }
@@ -216,9 +215,8 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     // MARK: - KeyboardHiding -
     
     @objc public func hideKeyboard() {
-        textInputs.forEach { textInput in
-            guard textInput.isFirstResponder else { return }
-            _ = textInput.resignFirstResponder()
+        textInputs.filter({ $0.isFirstResponder }).forEach { (textInput) in
+            textInput.resignFirstResponder()
         }
     }
     
@@ -248,10 +246,7 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     // MARK: - FirstResponding -
     
     public func firstResponder() -> UIView? {
-        let textInput = textInputs.first(where: { (textInput) -> Bool in
-            return textInput.isFirstResponder
-        })
-        return textInput
+        return textInputs.first(where: { $0.isFirstResponder })
     }
 }
 
@@ -280,12 +275,11 @@ private extension UIView {
     
     func subviewsOf<T>(type: T.Type) -> [T] {
         var searchedSubviews = [T]()
-        for subview in subviews {
+        subviews.forEach { (subview) in
             if let view = subview as? T {
                 searchedSubviews.append(view)
-            } else {
-                searchedSubviews += subview.subviewsOf(type: T.self)
             }
+            searchedSubviews += subview.subviewsOf(type: T.self)
         }
         return searchedSubviews
     }
