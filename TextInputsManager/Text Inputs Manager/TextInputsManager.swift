@@ -19,13 +19,12 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
 
     @IBOutlet private weak var containerView: UIView!
     
+    private var keyboardRect = CGRect.zero
+    private var textInputs = [UIView]()
     private var returnKeyProvider: ReturnKeyProviderHandler = { (_, isLast) -> UIReturnKeyType in
         guard isLast else { return .next }
         return .done
     }
-    
-    private var keyboardRect = CGRect.zero
-    private var textInputs = [UIView]()
     
     // MARK: - Life -
     
@@ -258,13 +257,10 @@ extension TextInputsManager: UIGestureRecognizerDelegate {
         let tables: [UIView] = containerView.subviewsOf(type: UITableView.self)
         let collections: [UIView] = containerView.subviewsOf(type: UICollectionView.self)
         let subviews: [UIView] = tables + collections
-        for subview in subviews {
+        return !subviews.contains(where: { (subview) -> Bool in
             let point = gestureRecognizer.location(in: subview)
-            if subview.point(inside: point, with: nil) {
-                return false
-            }
-        }
-        return true
+            return subview.point(inside: point, with: nil)
+        })
     }
     
 }
