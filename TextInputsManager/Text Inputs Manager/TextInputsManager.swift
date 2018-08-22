@@ -21,6 +21,7 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     
     private var keyboardRect = CGRect.zero
     private var textInputs = [UIView]()
+    
     private var returnKeyProvider: ReturnKeyProviderHandler = { (_, isLast) -> UIReturnKeyType in
         guard isLast else { return .next }
         return .done
@@ -28,76 +29,87 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     
     // MARK: - Life -
     
+    deinit {
+        unsubscribeFromAllNotifications()
+    }
+    
     open override func awakeFromNib() {
         super.awakeFromNib()
         configureManager()
-    }
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillShow, object: nil)
-        NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillHide, object: nil)
-        textInputs.compactMap({ $0 as? UITextView }).forEach { (textView) in
-            NotificationCenter.default.removeObserver(self, name: .UITextViewTextDidEndEditing, object: textView)
-        }
+        addTapGestureRecognizer(to: containerView, needed: hideOnTap)
     }
     
     // MARK: - Private -
     
     private func configureManager() {
         subscribeForKeyboardNotifications()
-        collectTextInputs()
-        guard hideOnTap else { return }
-        addTapGestureRecognizer()
+        textInputs = collectTextInputs(in: containerView)
+        textInputs.sortByOrigin(convertedTo: UIApplication.shared.keyWindow)
+    }
+    
+    private func reset() {
+        unsubscribeFromAllNotifications()
+        textInputs.removeAll()
+    }
+    
+    private func unsubscribeFromAllNotifications() {
+        textInputs.compactMap({ $0 as? UITextView }).forEach { (textView) in
+            unsubscribeForNotifications(for: textView)
+        }
+        unsubscribeForKeyboardNotifications()
     }
     
     private func subscribeForKeyboardNotifications() {
+        unsubscribeForKeyboardNotifications()
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: .UIKeyboardWillShow, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: .UIKeyboardWillHide, object: nil)
+    }
+
+    private func unsubscribeForKeyboardNotifications() {
+        NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillShow, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillHide, object: nil)
+    }
+    
+    private func subscribeForNotifications(for textView: UITextView) {
+        unsubscribeForNotifications(for: textView)
+        NotificationCenter.default.addObserver(self, selector: #selector(textViewDidFinishEdititng), name: .UITextViewTextDidEndEditing,
+                                               object: textView)
+    }
+    
+    private func unsubscribeForNotifications(for textView: UITextView) {
+        NotificationCenter.default.removeObserver(self, name: .UITextViewTextDidEndEditing, object: textView)
     }
     
     /* Collects all subviews with type UITextField and UITextView */
     
-    private func collectTextInputs() {
-        textInputs = collectTextFields() + collectTextViews()
-        sortInputsByOrigin()
-        guard handleReturnKeyType else { return }
-        assignReturnKeys()
+    private func collectTextInputs(in container: UIView) -> [UIView] {
+        return collectTextFields(in: container) + collectTextViews(in: container)
     }
     
-    private func collectTextFields() -> [UIView] {
-        let textFields = containerView.subviewsOf(type: UITextField.self)
+    private func collectTextFields(in container: UIView) -> [UIView] {
+        let textFields = container.subviewsOf(type: UITextField.self)
         textFields.forEach { (textField) in
             textField.addTarget(self, action: #selector(didFinishEdititng), for: .editingDidEndOnExit)
         }
         return textFields
     }
     
-    private func collectTextViews() -> [UIView] {
-        let textViews = containerView.subviewsOf(type: UITextView.self)
+    private func collectTextViews(in container: UIView) -> [UIView] {
+        let textViews = container.subviewsOf(type: UITextView.self)
         textViews.forEach { (textView) in
-            NotificationCenter.default.addObserver(self, selector: #selector(textViewDidFinishEdititng), name: .UITextViewTextDidEndEditing,
-                                                   object: textView)
+            subscribeForNotifications(for: textView)
         }
         return textViews
     }
     
-    private func sortInputsByOrigin() {
-        guard let window = UIApplication.shared.keyWindow else { return }
-        textInputs.sort { (currentObject, nextObject) -> Bool in
-            let currentObjectOrigin = currentObject.convert(currentObject.frame.origin, to: window)
-            let nextObjectOrigin = nextObject.convert(nextObject.frame.origin, to: window)
-            guard currentObjectOrigin.y != nextObjectOrigin.y else {
-                return currentObjectOrigin.x < nextObjectOrigin.x
-            }
-            return currentObjectOrigin.y < nextObjectOrigin.y
-        }
-    }
+    /* Adding Tap Gesture */
     
-    private func addTapGestureRecognizer() {
+    private func addTapGestureRecognizer(to container: UIView, needed: Bool) {
+        guard needed else { return }
         let tap = UITapGestureRecognizer(target: self, action: #selector(hideKeyboard))
         tap.numberOfTapsRequired = 1
         tap.delegate = self
-        containerView.addGestureRecognizer(tap)
+        container.addGestureRecognizer(tap)
     }
     
     private func activateField(at index: Int) {
@@ -238,8 +250,8 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     // MARK: - TextFieldsManagerReloading -
     
     public func reloadTextInputsManager() {
-        textInputs.removeAll()
-        collectTextInputs()
+        reset()
+        configureManager()
     }
     
     // MARK: - FirstResponding -
@@ -261,23 +273,6 @@ extension TextInputsManager: UIGestureRecognizerDelegate {
             let point = gestureRecognizer.location(in: subview)
             return subview.point(inside: point, with: nil)
         })
-    }
-    
-}
-
-// MARK: - UIView -
-
-private extension UIView {
-    
-    func subviewsOf<T>(type: T.Type) -> [T] {
-        var searchedSubviews = [T]()
-        subviews.forEach { (subview) in
-            if let view = subview as? T {
-                searchedSubviews.append(view)
-            }
-            searchedSubviews += subview.subviewsOf(type: T.self)
-        }
-        return searchedSubviews
     }
     
 }
