@@ -8,26 +8,25 @@
 
 import UIKit
 
-public typealias ReturnKeyProviderHandler = ((Int, Bool) -> UIReturnKeyType)
+public typealias ReturnKeyTypeProvider = ((Int, Bool) -> UIReturnKeyType)
 
 open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, TextInputsManagerReloading, FirstResponding {
     
-    @IBInspectable private var hideOnTap: Bool = true
-    @IBInspectable private var nextBecomesFirstResponder: Bool = true
-    @IBInspectable private var handleReturnKeyType: Bool = true
-    @IBInspectable private var additionalSpaceAboveKeyboard: CGFloat = 20.0
-
-    @IBOutlet private weak var containerView: UIView!
-    
-    private var keyboardRect = CGRect.zero
     private var textInputs = [UIView]()
     
-    private var returnKeyProvider: ReturnKeyProviderHandler = { (_, isLast) -> UIReturnKeyType in
+    @IBOutlet private weak var containerView: UIView!
+    
+    @IBInspectable private var hideOnTap: Bool = true
+    @IBInspectable private var handleReturnKeyType: Bool = true
+    @IBInspectable private var nextBecomesFirstResponder: Bool = true
+    @IBInspectable private var additionalSpaceAboveKeyboard: CGFloat = 20.0
+
+    private var currentReturnKeyTypeProvider: ReturnKeyTypeProvider = { (_, isLast) -> UIReturnKeyType in
         guard isLast else { return .next }
         return .done
     }
     
-    // MARK: - Life -
+    // MARK: - Lifecycle -
     
     deinit {
         unsubscribeFromAllNotifications()
@@ -45,6 +44,7 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
         subscribeForKeyboardNotifications()
         textInputs = collectTextInputs(in: containerView)
         textInputs.sortByOrigin(convertedTo: UIApplication.shared.keyWindow)
+        assignReturnKeys(for: textInputs, with: currentReturnKeyTypeProvider)
     }
     
     private func reset() {
@@ -52,35 +52,37 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
         textInputs.removeAll()
     }
     
+    // MARK: - Notifications -
+    
     private func unsubscribeFromAllNotifications() {
         textInputs.compactMap({ $0 as? UITextView }).forEach { (textView) in
-            unsubscribeForNotifications(for: textView)
+            unsubscribeFromNotifications(for: textView)
         }
-        unsubscribeForKeyboardNotifications()
+        unsubscribeFromKeyboardNotifications()
     }
     
     private func subscribeForKeyboardNotifications() {
-        unsubscribeForKeyboardNotifications()
+        unsubscribeFromKeyboardNotifications()
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: .UIKeyboardWillShow, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: .UIKeyboardWillHide, object: nil)
     }
 
-    private func unsubscribeForKeyboardNotifications() {
+    private func unsubscribeFromKeyboardNotifications() {
         NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillShow, object: nil)
         NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillHide, object: nil)
     }
     
     private func subscribeForNotifications(for textView: UITextView) {
-        unsubscribeForNotifications(for: textView)
+        unsubscribeFromNotifications(for: textView)
         NotificationCenter.default.addObserver(self, selector: #selector(textViewDidFinishEdititng), name: .UITextViewTextDidEndEditing,
                                                object: textView)
     }
     
-    private func unsubscribeForNotifications(for textView: UITextView) {
+    private func unsubscribeFromNotifications(for textView: UITextView) {
         NotificationCenter.default.removeObserver(self, name: .UITextViewTextDidEndEditing, object: textView)
     }
     
-    /* Collects all subviews with type UITextField and UITextView */
+    // MARK: - Collecting Views -
     
     private func collectTextInputs(in container: UIView) -> [UIView] {
         return collectTextFields(in: container) + collectTextViews(in: container)
@@ -102,51 +104,42 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
         return textViews
     }
     
-    /* Adding Tap Gesture */
+   // MARK: - Gesture Recognizer -
     
     private func addTapGestureRecognizer(to container: UIView, needed: Bool) {
         guard needed else { return }
-        let tap = UITapGestureRecognizer(target: self, action: #selector(hideKeyboard))
-        tap.numberOfTapsRequired = 1
-        tap.delegate = self
+        let tap = UITapGestureRecognizer(target: self, action: #selector(hideKeyboard), numberOfTapsRequired: 1, delegate: self)
         container.addGestureRecognizer(tap)
     }
     
-    private func activateField(at index: Int) {
-        guard textInputs.indices.contains(index) else {
+    // MARK: - Activate next field -
+    
+    private func activateNext(in textInputs: [UIView], after currentResponder: UIView, canBecomeFirstResponder: Bool) {
+        guard canBecomeFirstResponder, let nextResponder = textInputs.nextResponder(after: currentResponder) else {
             hideKeyboard()
             return
         }
-        let nextInputView = textInputs[index]
-        guard nextInputView.canBecomeFirstResponder else {
-            let nextIndex = index + 1
-            activateField(at: nextIndex)
-            return
-        }
-        nextInputView.becomeFirstResponder()
-        UIView.animate(withDuration: 0.25) { [weak self] in
-            guard let strongSelf = self else { return }
-            strongSelf.moveToActiveTextInput(keyboardFrame: strongSelf.keyboardRect)
+        currentResponder.resignFirstResponder()
+        nextResponder.becomeFirstResponder()
+    }
+    
+    // MARK: - Assign return key type -
+    
+    private func assignReturnKeys(for textInputs: [UIView], with currentReturnKeyTypeProvider: ReturnKeyTypeProvider) {
+        textInputs.compactMap({ $0 as? UITextField }).forEach { (textField) in
+            let index = textInputs.index(of: textField)! // operating in bounds of current array
+            let isLast = textInputs.indices.last == index
+            textField.returnKeyType = currentReturnKeyTypeProvider(index, isLast)
         }
     }
     
-    private func assignReturnKeys() {
-        textInputs.enumerated().forEach { [weak self] (index, inputView) in
-            self?.assignReturnKey(for: inputView, at: index)
-        }
-    }
-    
-    private func assignReturnKey(for inputView: UIView, at index: Int) {
-        guard let textField = inputView as? UITextField else { return }
-        let isLast = textInputs.indices.last == index
-        textField.returnKeyType = returnKeyProvider(index, isLast)
-    }
+    // MARK: - Animation -
     
     private func animateKeyboardAction(withInfoFrom notification: Notification, actionHandler: @escaping ((CGRect) -> Void)) {
-        guard let userInfo = notification.userInfo, let rect = userInfo[UIKeyboardFrameEndUserInfoKey] as? CGRect,
+        guard let userInfo = notification.userInfo,
+            let rect = userInfo[UIKeyboardFrameEndUserInfoKey] as? CGRect,
             let animationDurarion = userInfo[UIKeyboardAnimationDurationUserInfoKey] as? TimeInterval,
             let curve = userInfo[UIKeyboardAnimationCurveUserInfoKey] as? UInt else { return }
-        keyboardRect = rect
         UIView.animate(withDuration: animationDurarion, delay: 0, options: UIViewAnimationOptions(rawValue: curve), animations: {
             actionHandler(rect)
         }, completion: nil)
@@ -155,16 +148,12 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     // MARK: - Private Notifications Selectors -
     
     @objc private func textViewDidFinishEdititng(_ notification: Notification) {
-        guard let textView = notification.object as? UITextView, textView.isFirstResponder else { return }
+        guard let textView = notification.object as? UIView, textView.isFirstResponder else { return }
         didFinishEdititng(textView)
     }
     
-    @objc private func didFinishEdititng(_ textInput: UITextInput) {
-        guard let index = textInputs.index(where: {$0 === textInput}), nextBecomesFirstResponder else {
-            hideKeyboard()
-            return }
-        let nextIndex = index + 1
-        activateField(at: nextIndex)
+    @objc private func didFinishEdititng(_ textInput: UIView) {
+        activateNext(in: textInputs, after: textInput, canBecomeFirstResponder: nextBecomesFirstResponder)
     }
     
     // MARK: - Keyboard notifications -
@@ -203,8 +192,8 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     private func keyboardWillShow(keyboardFrame rect: CGRect) {
         guard let scroll = containerView as? UIScrollView else { return }
         let distance = UIScreen.main.bounds.maxY - containerView.frame.maxY
-        let bottomInset = rect.size.height - distance + additionalSpaceAboveKeyboard
-        scroll.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: bottomInset, right: 0)
+        let bottomInset = rect.height - distance + additionalSpaceAboveKeyboard
+        scroll.contentInset.bottom = bottomInset
     }
     
     private func keyboardWillHide() {
@@ -212,37 +201,32 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
             containerView.transform = .identity
             return
         }
-        scroll.contentInset = .zero
+        scroll.contentInset.bottom = 0
     }
     
     // MARK: - Public -
     
-    public func set(returnKeyProvider: @escaping ReturnKeyProviderHandler) {
+    public func set(returnKeyTypeProvider: @escaping ReturnKeyTypeProvider) {
         guard !handleReturnKeyType else { return }
-        self.returnKeyProvider = returnKeyProvider
-        assignReturnKeys()
+        currentReturnKeyTypeProvider = returnKeyTypeProvider
+        assignReturnKeys(for: textInputs, with: currentReturnKeyTypeProvider)
     }
     
     // MARK: - KeyboardHiding -
     
     @objc public func hideKeyboard() {
-        textInputs.filter({ $0.isFirstResponder }).forEach { (textInput) in
-            textInput.resignFirstResponder()
-        }
+        firstResponder()?.resignFirstResponder()
     }
     
     // MARK: - TextInputsClearing -
     
-    
     public func clearTextInputs() {
         textInputs.forEach { textInput in
             if let textField = textInput as? UITextField {
-                textField.text = nil
-                textField.attributedText = nil
+                textField.clear()
             }
             if let textView = textInput as? UITextView {
-                textView.text = String()
-                textView.attributedText = NSAttributedString(string: String())
+                textView.clear()
             }
         }
     }

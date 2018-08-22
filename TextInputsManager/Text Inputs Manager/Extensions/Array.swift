@@ -17,4 +17,11 @@ extension Array where Element == UIView {
         }
     }
     
+    func nextResponder(after view: UIView) -> UIView? {
+        guard let indexOfObject = index(of: view) else { return nil }
+        return enumerated().first(where: { (index, view) -> Bool in
+            return index > indexOfObject && view.canBecomeFirstResponder
+        })?.element
+    }
+    
 }
