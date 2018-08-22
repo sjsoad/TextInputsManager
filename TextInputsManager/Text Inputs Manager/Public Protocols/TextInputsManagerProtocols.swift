@@ -24,3 +24,9 @@ public protocol KeyboardHiding {
 public protocol FirstResponding {
     func firstResponder() -> UIView?
 }
+
+public protocol ReturnKeyTypeProviding {
+    
+    func set(returnKeyTypeProvider: @escaping ReturnKeyTypeProvider)
+    
+}

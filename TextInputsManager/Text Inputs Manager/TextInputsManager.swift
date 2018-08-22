@@ -8,9 +8,7 @@
 
 import UIKit
 
-public typealias ReturnKeyTypeProvider = ((Int, Bool) -> UIReturnKeyType)
-
-open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, TextInputsManagerReloading, FirstResponding {
+open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, TextInputsManagerReloading, FirstResponding, ReturnKeyTypeProviding {
     
     private var textInputs = [UIView]()
     
@@ -119,7 +117,7 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
             hideKeyboard()
             return
         }
-        currentResponder.resignFirstResponder()
+        currentResponder.resignFirstResponder() // cause jumps, but no need to store keyboard height
         nextResponder.becomeFirstResponder()
     }
     
@@ -204,14 +202,6 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
         scroll.contentInset.bottom = 0
     }
     
-    // MARK: - Public -
-    
-    public func set(returnKeyTypeProvider: @escaping ReturnKeyTypeProvider) {
-        guard !handleReturnKeyType else { return }
-        currentReturnKeyTypeProvider = returnKeyTypeProvider
-        assignReturnKeys(for: textInputs, with: currentReturnKeyTypeProvider)
-    }
-    
     // MARK: - KeyboardHiding -
     
     @objc public func hideKeyboard() {
@@ -243,6 +233,15 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     public func firstResponder() -> UIView? {
         return textInputs.first(where: { $0.isFirstResponder })
     }
+    
+    // MARK: - ReturnKeyTypeProviding -
+    
+    public func set(returnKeyTypeProvider: @escaping ReturnKeyTypeProvider) {
+        guard !handleReturnKeyType else { return }
+        currentReturnKeyTypeProvider = returnKeyTypeProvider
+        assignReturnKeys(for: textInputs, with: currentReturnKeyTypeProvider)
+    }
+    
 }
 
 // MARK: - UIGestureRecognizerDelegate -
