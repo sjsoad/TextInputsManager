@@ -26,7 +26,5 @@ public protocol FirstResponding {
 }
 
 public protocol ReturnKeyTypeProviding {
-    
     func set(returnKeyTypeProvider: @escaping ReturnKeyTypeProvider)
-    
 }

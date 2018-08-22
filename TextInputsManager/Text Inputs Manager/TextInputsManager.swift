@@ -11,6 +11,7 @@ import UIKit
 open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, TextInputsManagerReloading, FirstResponding, ReturnKeyTypeProviding {
     
     private var textInputs = [UIView]()
+    private var containerController: ContainerControlling?
     
     @IBOutlet private weak var containerView: UIView!
     
@@ -32,6 +33,7 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     
     open override func awakeFromNib() {
         super.awakeFromNib()
+        containerController = ContainerController().controller(for: containerView)
         configureManager()
         addTapGestureRecognizer(to: containerView, needed: hideOnTap)
     }
@@ -61,8 +63,8 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     
     private func subscribeForKeyboardNotifications() {
         unsubscribeFromKeyboardNotifications()
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: .UIKeyboardWillShow, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: .UIKeyboardWillHide, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: .UIKeyboardWillShow, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: .UIKeyboardWillHide, object: nil)
     }
 
     private func unsubscribeFromKeyboardNotifications() {
@@ -117,8 +119,8 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
             hideKeyboard()
             return
         }
-        currentResponder.resignFirstResponder() // cause jumps, but no need to store keyboard height
         nextResponder.becomeFirstResponder()
+        moveToActiveTextInput(keyboardFrame: .zero, animated: true)
     }
     
     // MARK: - Assign return key type -
@@ -158,48 +160,51 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     
     @objc private func keyboardWillShow(_ notification: Notification) {
         animateKeyboardAction(withInfoFrom: notification) { [weak self] (rect) in
-            self?.keyboardWillShow(keyboardFrame: rect)
+            self?.handleKeyboardAppearance(keyboardFrame: rect)
             self?.moveToActiveTextInput(keyboardFrame: rect)
         }
     }
     
     @objc private func keyboardWillHide(_ notification: Notification) {
         animateKeyboardAction(withInfoFrom: notification) { [weak self] (_) in
-            self?.keyboardWillHide()
+            self?.handleKeyboardDisappearance()
         }
     }
     
     // MARK: - Behaviour for containerView -
     
-    private func moveToActiveTextInput(keyboardFrame rect: CGRect) {
-        guard let activeInputView = firstResponder() else { return }
-        var frame = containerView.convert(activeInputView.bounds, from: activeInputView)
-        frame.origin.y += additionalSpaceAboveKeyboard
-        guard let scroll = containerView as? UIScrollView else {
-            containerView.transform = .identity
-            let visibleContentHeight = UIScreen.main.bounds.height - rect.height
-            let yPositionRelativeToWindow = containerView.frame.minY + frame.maxY
-            guard yPositionRelativeToWindow > visibleContentHeight else { return }
-            let delta = yPositionRelativeToWindow - visibleContentHeight
-            containerView.transform = CGAffineTransform(translationX: 0, y: -delta)
-            return
-        }
-        scroll.scrollRectToVisible(frame, animated: false)
+    private func moveToActiveTextInput(keyboardFrame rect: CGRect, animated: Bool = false) {
+        containerController?.moveTo()
+//        guard let activeInputView = firstResponder() else { return }
+//        var frame = containerView.convert(activeInputView.bounds, from: activeInputView)
+//        frame.origin.y += additionalSpaceAboveKeyboard
+//        guard let scroll = containerView as? UIScrollView else {
+//            containerView.transform = .identity
+//            let visibleContentHeight = UIScreen.main.bounds.height - rect.height
+//            let yPositionRelativeToWindow = containerView.frame.minY + frame.maxY
+//            guard yPositionRelativeToWindow > visibleContentHeight else { return }
+//            let delta = yPositionRelativeToWindow - visibleContentHeight
+//            containerView.transform = CGAffineTransform(translationX: 0, y: -delta)
+//            return
+//        }
+//        scroll.scrollRectToVisible(frame, animated: false)
     }
     
-    private func keyboardWillShow(keyboardFrame rect: CGRect) {
-        guard let scroll = containerView as? UIScrollView else { return }
-        let distance = UIScreen.main.bounds.maxY - containerView.frame.maxY
-        let bottomInset = rect.height - distance + additionalSpaceAboveKeyboard
-        scroll.contentInset.bottom = bottomInset
+    private func handleKeyboardAppearance(keyboardFrame rect: CGRect) {
+        containerController?.handleKeyboardAppearance()
+//        guard let scroll = containerView as? UIScrollView else { return }
+//        let distance = UIScreen.main.bounds.maxY - containerView.frame.maxY
+//        let bottomInset = rect.height - distance + additionalSpaceAboveKeyboard
+//        scroll.contentInset.bottom = bottomInset
     }
     
-    private func keyboardWillHide() {
-        guard let scroll = containerView as? UIScrollView else {
-            containerView.transform = .identity
-            return
-        }
-        scroll.contentInset.bottom = 0
+    private func handleKeyboardDisappearance() {
+        containerController?.handleKeyboardDisappearance()
+//        guard let scroll = containerView as? UIScrollView else {
+//            containerView.transform = .identity
+//            return
+//        }
+//        scroll.contentInset.bottom = 0
     }
     
     // MARK: - KeyboardHiding -
