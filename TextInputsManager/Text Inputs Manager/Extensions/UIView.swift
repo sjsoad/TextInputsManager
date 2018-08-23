@@ -21,4 +21,9 @@ extension UIView {
         return searchedSubviews
     }
     
+    var distanceToBottomOfScreen: CGFloat {
+        let convertedFrame = convert(frame, to: UIApplication.shared.keyWindow)
+        return UIScreen.main.bounds.height - convertedFrame.maxY
+    }
+    
 }

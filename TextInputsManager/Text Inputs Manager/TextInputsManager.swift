@@ -33,7 +33,7 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     
     open override func awakeFromNib() {
         super.awakeFromNib()
-        containerController = ContainerController().controller(for: containerView)
+        containerController = ContainerControllerFactory().controller(for: containerView)
         configureManager()
         addTapGestureRecognizer(to: containerView, needed: hideOnTap)
     }
@@ -104,6 +104,16 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
         return textViews
     }
     
+    // MARK: - Assign return key type -
+    
+    private func assignReturnKeys(for textInputs: [UIView], with currentReturnKeyTypeProvider: ReturnKeyTypeProvider) {
+        textInputs.compactMap({ $0 as? UITextField }).forEach { (textField) in
+            let index = textInputs.index(of: textField)! // operating in bounds of current array
+            let isLast = textInputs.indices.last == index
+            textField.returnKeyType = currentReturnKeyTypeProvider(index, isLast)
+        }
+    }
+    
    // MARK: - Gesture Recognizer -
     
     private func addTapGestureRecognizer(to container: UIView, needed: Bool) {
@@ -120,17 +130,6 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
             return
         }
         nextResponder.becomeFirstResponder()
-        moveToActiveTextInput(keyboardFrame: .zero, animated: true)
-    }
-    
-    // MARK: - Assign return key type -
-    
-    private func assignReturnKeys(for textInputs: [UIView], with currentReturnKeyTypeProvider: ReturnKeyTypeProvider) {
-        textInputs.compactMap({ $0 as? UITextField }).forEach { (textField) in
-            let index = textInputs.index(of: textField)! // operating in bounds of current array
-            let isLast = textInputs.indices.last == index
-            textField.returnKeyType = currentReturnKeyTypeProvider(index, isLast)
-        }
     }
     
     // MARK: - Animation -
@@ -174,37 +173,16 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     // MARK: - Behaviour for containerView -
     
     private func moveToActiveTextInput(keyboardFrame rect: CGRect, animated: Bool = false) {
-        containerController?.moveTo()
-//        guard let activeInputView = firstResponder() else { return }
-//        var frame = containerView.convert(activeInputView.bounds, from: activeInputView)
-//        frame.origin.y += additionalSpaceAboveKeyboard
-//        guard let scroll = containerView as? UIScrollView else {
-//            containerView.transform = .identity
-//            let visibleContentHeight = UIScreen.main.bounds.height - rect.height
-//            let yPositionRelativeToWindow = containerView.frame.minY + frame.maxY
-//            guard yPositionRelativeToWindow > visibleContentHeight else { return }
-//            let delta = yPositionRelativeToWindow - visibleContentHeight
-//            containerView.transform = CGAffineTransform(translationX: 0, y: -delta)
-//            return
-//        }
-//        scroll.scrollRectToVisible(frame, animated: false)
+        guard let responder = firstResponder() else { return }
+        containerController?.moveTo(responder, keyboardFrame: rect, spaceAboveKeyboard: additionalSpaceAboveKeyboard)
     }
     
     private func handleKeyboardAppearance(keyboardFrame rect: CGRect) {
-        containerController?.handleKeyboardAppearance()
-//        guard let scroll = containerView as? UIScrollView else { return }
-//        let distance = UIScreen.main.bounds.maxY - containerView.frame.maxY
-//        let bottomInset = rect.height - distance + additionalSpaceAboveKeyboard
-//        scroll.contentInset.bottom = bottomInset
+        containerController?.handleKeyboardAppearance(keyboardFrame: rect, spaceAboveKeyboard: additionalSpaceAboveKeyboard)
     }
     
     private func handleKeyboardDisappearance() {
         containerController?.handleKeyboardDisappearance()
-//        guard let scroll = containerView as? UIScrollView else {
-//            containerView.transform = .identity
-//            return
-//        }
-//        scroll.contentInset.bottom = 0
     }
     
     // MARK: - KeyboardHiding -
