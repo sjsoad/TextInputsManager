@@ -178,7 +178,7 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     }
     
     private func handleKeyboardAppearance(keyboardFrame rect: CGRect) {
-        containerController?.handleKeyboardAppearance(keyboardFrame: rect, spaceAboveKeyboard: additionalSpaceAboveKeyboard)
+        containerController?.handleKeyboardAppearance(keyboardFrame: rect)
     }
     
     private func handleKeyboardDisappearance() {

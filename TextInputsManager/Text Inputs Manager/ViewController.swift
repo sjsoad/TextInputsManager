@@ -21,9 +21,8 @@ final class ViewController: ContainerControlling {
         view.transform = .identity
         var frame = view.convert(responder.frame, to: UIApplication.shared.keyWindow)
         frame.origin.y += spaceAboveKeyboard
-        let visibleContentHeight = UIScreen.main.contentHeightNotCoveredBy(keyboardFrame: rect)
-        guard frame.maxY > visibleContentHeight else { return }
-        let delta = frame.maxY - visibleContentHeight
+        guard frame.maxY > rect.minY else { return }
+        let delta = frame.maxY - rect.minY
         view.transform = CGAffineTransform(translationX: 0, y: -delta)
     }
     

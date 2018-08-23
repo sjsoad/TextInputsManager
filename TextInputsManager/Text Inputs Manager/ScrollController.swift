@@ -18,17 +18,20 @@ final class ScrollController: ContainerControlling {
     // MARK: - ViewManipulating -
     
     func moveTo(_ responder: UIView, keyboardFrame rect: CGRect, spaceAboveKeyboard: CGFloat) {
-        var frame = scroll.convert(responder.bounds, from: responder)
+        var frame = scroll.convert(responder.frame, to: scroll)
         frame.origin.y += spaceAboveKeyboard
         scroll.scrollRectToVisible(frame, animated: false)
     }
     
-    func handleKeyboardAppearance(keyboardFrame rect: CGRect, spaceAboveKeyboard: CGFloat) {
-        let bottomInset = rect.height - scroll.distanceToBottomOfScreen + spaceAboveKeyboard
+    func handleKeyboardAppearance(keyboardFrame rect: CGRect) {
+        let bottomInset = rect.height - scroll.distanceToBottomOfScreen
+        scroll.scrollIndicatorInsets.bottom = bottomInset
         scroll.contentInset.bottom = bottomInset
+        
     }
     
     func handleKeyboardDisappearance() {
+        scroll.scrollIndicatorInsets.bottom = 0
         scroll.contentInset.bottom = 0
     }
     

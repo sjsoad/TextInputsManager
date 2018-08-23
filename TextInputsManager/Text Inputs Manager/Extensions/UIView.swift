@@ -22,7 +22,7 @@ extension UIView {
     }
     
     var distanceToBottomOfScreen: CGFloat {
-        let convertedFrame = convert(frame, to: UIApplication.shared.keyWindow)
+        let convertedFrame = convert(bounds, to: UIApplication.shared.keyWindow)
         return UIScreen.main.bounds.height - convertedFrame.maxY
     }
     
