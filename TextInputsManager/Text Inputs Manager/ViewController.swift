@@ -22,8 +22,8 @@ final class ViewController: ContainerControlling {
         var frame = view.convert(responder.frame, to: UIApplication.shared.keyWindow)
         frame.origin.y += spaceAboveKeyboard
         guard frame.maxY > rect.minY else { return }
-        let delta = frame.maxY - rect.minY
-        view.transform = CGAffineTransform(translationX: 0, y: -delta)
+        let delta =  rect.minY - frame.maxY
+        view.transform = CGAffineTransform(translationX: 0, y: delta)
     }
     
     func handleKeyboardDisappearance() {
