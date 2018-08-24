@@ -13,7 +13,7 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     private var textInputs = [UIView]()
     private var containerController: ContainerControlling?
     
-    @IBOutlet private weak var containerView: UIView!
+    @IBOutlet private weak var containerView: UIView?
     
     @IBInspectable private var hideOnTap: Bool = true
     @IBInspectable private var handleReturnKeyType: Bool = true
@@ -33,6 +33,7 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     
     open override func awakeFromNib() {
         super.awakeFromNib()
+        guard let containerView = containerView else { return }
         containerController = ContainerControllerFactory().controller(for: containerView)
         configureManager()
         addTapGestureRecognizer(to: containerView, needed: hideOnTap)
@@ -41,6 +42,7 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     // MARK: - Private -
     
     private func configureManager() {
+        guard let containerView = containerView else { return }
         subscribeForKeyboardNotifications()
         textInputs = collectTextInputs(in: containerView)
         textInputs.sortByOrigin(convertedTo: UIApplication.shared.keyWindow)
@@ -108,7 +110,7 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     
     private func assignReturnKeys(for textInputs: [UIView], with currentReturnKeyTypeProvider: ReturnKeyTypeProvider) {
         textInputs.compactMap({ $0 as? UITextField }).forEach { (textField) in
-            let index = textInputs.index(of: textField)! // operating in bounds of current array
+            guard let index = textInputs.index(of: textField) else { return }
             let isLast = textInputs.indices.last == index
             textField.returnKeyType = currentReturnKeyTypeProvider(index, isLast)
         }
@@ -232,8 +234,8 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
 extension TextInputsManager: UIGestureRecognizerDelegate {
     
     public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        let tables: [UIView] = containerView.subviewsOf(type: UITableView.self)
-        let collections: [UIView] = containerView.subviewsOf(type: UICollectionView.self)
+        let tables: [UIView] = containerView?.subviewsOf(type: UITableView.self) ?? []
+        let collections: [UIView] = containerView?.subviewsOf(type: UICollectionView.self) ?? []
         let subviews: [UIView] = tables + collections
         return !subviews.contains(where: { (subview) -> Bool in
             let point = gestureRecognizer.location(in: subview)

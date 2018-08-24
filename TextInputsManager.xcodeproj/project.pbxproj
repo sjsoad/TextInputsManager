@@ -7,6 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A52E19E8212FD56B0077D6E3 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = A52E19E4212FD56A0077D6E3 /* Constants.swift */; };
+		A52E19E9212FD56B0077D6E3 /* ContainerControllerFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A52E19E5212FD56A0077D6E3 /* ContainerControllerFactory.swift */; };
+		A52E19EA212FD56B0077D6E3 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A52E19E6212FD56A0077D6E3 /* ViewController.swift */; };
+		A52E19EB212FD56B0077D6E3 /* ScrollController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A52E19E7212FD56A0077D6E3 /* ScrollController.swift */; };
+		A52E19ED212FD5C80077D6E3 /* ContainerControlling.swift in Sources */ = {isa = PBXBuildFile; fileRef = A52E19EC212FD5C80077D6E3 /* ContainerControlling.swift */; };
+		A52E19F3212FD5DE0077D6E3 /* Array.swift in Sources */ = {isa = PBXBuildFile; fileRef = A52E19EE212FD5DE0077D6E3 /* Array.swift */; };
+		A52E19F4212FD5DE0077D6E3 /* UITapGestureRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A52E19EF212FD5DE0077D6E3 /* UITapGestureRecognizer.swift */; };
+		A52E19F5212FD5DE0077D6E3 /* CGPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = A52E19F0212FD5DE0077D6E3 /* CGPoint.swift */; };
+		A52E19F6212FD5DE0077D6E3 /* UITextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = A52E19F1212FD5DE0077D6E3 /* UITextField.swift */; };
+		A52E19F7212FD5DE0077D6E3 /* UITextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A52E19F2212FD5DE0077D6E3 /* UITextView.swift */; };
 		A57EE409208CD16000F45DA2 /* TextInputsManager.h in Headers */ = {isa = PBXBuildFile; fileRef = A57EE407208CD16000F45DA2 /* TextInputsManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A57EE415208CD1AA00F45DA2 /* TextInputsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A57EE410208CD1AA00F45DA2 /* TextInputsManager.swift */; };
 		A57EE416208CD1AA00F45DA2 /* TextInputsManagerProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = A57EE412208CD1AA00F45DA2 /* TextInputsManagerProtocols.swift */; };
@@ -14,6 +24,16 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A52E19E4212FD56A0077D6E3 /* Constants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		A52E19E5212FD56A0077D6E3 /* ContainerControllerFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContainerControllerFactory.swift; sourceTree = "<group>"; };
+		A52E19E6212FD56A0077D6E3 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		A52E19E7212FD56A0077D6E3 /* ScrollController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScrollController.swift; sourceTree = "<group>"; };
+		A52E19EC212FD5C80077D6E3 /* ContainerControlling.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContainerControlling.swift; sourceTree = "<group>"; };
+		A52E19EE212FD5DE0077D6E3 /* Array.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Array.swift; sourceTree = "<group>"; };
+		A52E19EF212FD5DE0077D6E3 /* UITapGestureRecognizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UITapGestureRecognizer.swift; sourceTree = "<group>"; };
+		A52E19F0212FD5DE0077D6E3 /* CGPoint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGPoint.swift; sourceTree = "<group>"; };
+		A52E19F1212FD5DE0077D6E3 /* UITextField.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UITextField.swift; sourceTree = "<group>"; };
+		A52E19F2212FD5DE0077D6E3 /* UITextView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UITextView.swift; sourceTree = "<group>"; };
 		A57EE404208CD16000F45DA2 /* TextInputsManager.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = TextInputsManager.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A57EE407208CD16000F45DA2 /* TextInputsManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TextInputsManager.h; sourceTree = "<group>"; };
 		A57EE410208CD1AA00F45DA2 /* TextInputsManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextInputsManager.swift; sourceTree = "<group>"; };
@@ -64,6 +84,10 @@
 			children = (
 				A59EE0D4212D41B800D0390B /* Extensions */,
 				A57EE410208CD1AA00F45DA2 /* TextInputsManager.swift */,
+				A52E19E4212FD56A0077D6E3 /* Constants.swift */,
+				A52E19E5212FD56A0077D6E3 /* ContainerControllerFactory.swift */,
+				A52E19E7212FD56A0077D6E3 /* ScrollController.swift */,
+				A52E19E6212FD56A0077D6E3 /* ViewController.swift */,
 				A57EE411208CD1AA00F45DA2 /* Public Protocols */,
 			);
 			path = "Text Inputs Manager";
@@ -72,6 +96,7 @@
 		A57EE411208CD1AA00F45DA2 /* Public Protocols */ = {
 			isa = PBXGroup;
 			children = (
+				A52E19EC212FD5C80077D6E3 /* ContainerControlling.swift */,
 				A57EE412208CD1AA00F45DA2 /* TextInputsManagerProtocols.swift */,
 			);
 			path = "Public Protocols";
@@ -88,6 +113,11 @@
 		A59EE0D4212D41B800D0390B /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
+				A52E19EE212FD5DE0077D6E3 /* Array.swift */,
+				A52E19F0212FD5DE0077D6E3 /* CGPoint.swift */,
+				A52E19EF212FD5DE0077D6E3 /* UITapGestureRecognizer.swift */,
+				A52E19F1212FD5DE0077D6E3 /* UITextField.swift */,
+				A52E19F2212FD5DE0077D6E3 /* UITextView.swift */,
 				A59EE0D5212D41C000D0390B /* UIView.swift */,
 			);
 			path = Extensions;
@@ -171,9 +201,19 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A52E19F5212FD5DE0077D6E3 /* CGPoint.swift in Sources */,
+				A52E19F3212FD5DE0077D6E3 /* Array.swift in Sources */,
+				A52E19EA212FD56B0077D6E3 /* ViewController.swift in Sources */,
+				A52E19E9212FD56B0077D6E3 /* ContainerControllerFactory.swift in Sources */,
+				A52E19F4212FD5DE0077D6E3 /* UITapGestureRecognizer.swift in Sources */,
+				A52E19EB212FD56B0077D6E3 /* ScrollController.swift in Sources */,
+				A52E19F7212FD5DE0077D6E3 /* UITextView.swift in Sources */,
+				A52E19ED212FD5C80077D6E3 /* ContainerControlling.swift in Sources */,
 				A57EE416208CD1AA00F45DA2 /* TextInputsManagerProtocols.swift in Sources */,
 				A59EE0D6212D41C000D0390B /* UIView.swift in Sources */,
 				A57EE415208CD1AA00F45DA2 /* TextInputsManager.swift in Sources */,
+				A52E19E8212FD56B0077D6E3 /* Constants.swift in Sources */,
+				A52E19F6212FD5DE0077D6E3 /* UITextField.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

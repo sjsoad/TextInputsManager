@@ -27,7 +27,6 @@ final class ScrollController: ContainerControlling {
         let bottomInset = rect.height - scroll.distanceToBottomOfScreen
         scroll.scrollIndicatorInsets.bottom = bottomInset
         scroll.contentInset.bottom = bottomInset
-        
     }
     
     func handleKeyboardDisappearance() {
