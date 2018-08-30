@@ -138,7 +138,7 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     
     private func animateKeyboardAction(withInfoFrom notification: Notification, actionHandler: @escaping ((CGRect) -> Void)) {
         guard let info = KeyboardNotification(from: notification) else { return }
-        UIView.animate(withDuration: info.animationDurarion, delay: 0, options: info.curve, animations: {
+        UIView.animate(withDuration: info.animationDurarion, delay: 0, options: info.options, animations: {
             actionHandler(info.rect)
         }, completion: nil)
     }
