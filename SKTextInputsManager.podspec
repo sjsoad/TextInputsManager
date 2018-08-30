@@ -9,7 +9,7 @@ s.summary = "TextInputsManager manages all text inputs in scrollview or view"
 s.requires_arc = true
 
 # 2
-s.version = "0.0.9"
+s.version = "0.1.0"
 
 # 3
 s.license = { :type => "MIT", :file => "LICENSE" }
