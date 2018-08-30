@@ -137,12 +137,9 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     // MARK: - Animation -
     
     private func animateKeyboardAction(withInfoFrom notification: Notification, actionHandler: @escaping ((CGRect) -> Void)) {
-        guard let userInfo = notification.userInfo,
-            let rect = userInfo[UIKeyboardFrameEndUserInfoKey] as? CGRect,
-            let animationDurarion = userInfo[UIKeyboardAnimationDurationUserInfoKey] as? TimeInterval,
-            let curve = userInfo[UIKeyboardAnimationCurveUserInfoKey] as? UInt else { return }
-        UIView.animate(withDuration: animationDurarion, delay: 0, options: UIViewAnimationOptions(rawValue: curve), animations: {
-            actionHandler(rect)
+        guard let info = KeyboardNotification(from: notification) else { return }
+        UIView.animate(withDuration: info.animationDurarion, delay: 0, options: info.curve, animations: {
+            actionHandler(info.rect)
         }, completion: nil)
     }
     
