@@ -65,23 +65,43 @@ open class TextInputsManager: NSObject, KeyboardHiding, TextInputsClearing, Text
     
     private func subscribeForKeyboardNotifications() {
         unsubscribeFromKeyboardNotifications()
+        #if swift(>=4.2)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
+        #else
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: .UIKeyboardWillShow, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: .UIKeyboardWillHide, object: nil)
+        #endif
     }
 
     private func unsubscribeFromKeyboardNotifications() {
+        #if swift(>=4.2)
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
+        #else
         NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillShow, object: nil)
         NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillHide, object: nil)
+        #endif
+        
     }
     
     private func subscribeForNotifications(for textView: UITextView) {
         unsubscribeFromNotifications(for: textView)
-        NotificationCenter.default.addObserver(self, selector: #selector(textViewDidFinishEdititng), name: .UITextViewTextDidEndEditing,
+        #if swift(>=4.2)
+        NotificationCenter.default.addObserver(self, selector: #selector(textViewDidFinishEdititng), name: UITextView.textDidEndEditingNotification,
                                                object: textView)
+        #else
+        NotificationCenter.default.addObserver(self, selector: #selector(textViewDidFinishEdititng), name: .UITextViewTextDidEndEditing,
+        object: textView)
+        #endif
     }
     
     private func unsubscribeFromNotifications(for textView: UITextView) {
+        #if swift(>=4.2)
+        NotificationCenter.default.removeObserver(self, name: UITextView.textDidEndEditingNotification, object: textView)
+        #else
         NotificationCenter.default.removeObserver(self, name: .UITextViewTextDidEndEditing, object: textView)
+        #endif
     }
     
     // MARK: - Collecting Views -
